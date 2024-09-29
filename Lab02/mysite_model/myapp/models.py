@@ -21,6 +21,24 @@ class Person(models.Model):
         "Returns the person's full name."
         return f"{self.first_name} {self.last_name}"
 
+class NewManager(models.Manager):
+    # ...
+    pass
+
+class MyPerson(Person):
+    objects = NewManager()
+    class Meta:
+        proxy = True
+
+    def do_something(self):
+        # ...
+        pass
+
+class OrderedPerson(Person):
+    class Meta:
+        ordering = ["last_name"]
+        proxy = True
+
 class Musician(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -102,3 +120,30 @@ class Student(CommonInfo, Unmanaged):
 
     class Meta(CommonInfo.Meta, Unmanaged.Meta):
         pass
+
+class Place(models.Model):
+    name = models.CharField(max_length=50, help_text="Tên")
+    address = models.CharField(max_length=80, help_text="Địa chỉ")
+
+    def __str__(self):
+        return self.name
+
+class Restaurant(Place):
+    serves_hot_dogs = models.BooleanField(default=False, help_text="hotdog?")
+    serves_pizza = models.BooleanField(default=False, help_text="pizza?")
+
+    place_ptr = models.OneToOneField(
+        Place,
+        on_delete=models.CASCADE,
+        parent_link=True,
+        primary_key=True,
+    )
+
+    def __str__(self):
+        return f"{self.name} (Restaurant)"
+
+class Supplier(Place):
+    customers = models.ManyToManyField(Place, related_name='providers', help_text="nhà cung cấp")
+
+    def __str__(self):
+        return f"{self.name} (Supplier)"
